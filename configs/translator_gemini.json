@@ -1,0 +1,13 @@
+{
+ "name": "gemini",
+ "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+ "model": "gemini-3.5-flash-lite",
+ "api_key_env": "GEMINI_API_KEY",
+ "batch_size": 15,
+ "context_pairs": 6,
+ "temperature": 0.3,
+ "timeout_sec": 60,
+ "max_retries": 4,
+ "max_wait_sec": 120,
+ "_why": "Mặc định (Thuận chốt 2026-10-29: dùng model nào chạy được). Đo 2026-10-29: 1 câu mất 1.5s, gói miễn phí ~500 lượt/ngày (báo cáo không chính thức). timeout 60s rộng gấp nhiều lần thời gian đo được. max_retries chỉ áp cho 5xx/timeout/429 theo phút; hết lượt theo ngày thì dừng ngay."
+}

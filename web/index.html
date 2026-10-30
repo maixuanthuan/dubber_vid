@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dubber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap">
+<style>
+	:root { --bg: #F5F6F8; --card: #FFFFFF; --ink: #1B2230; --mute: #667085; --faint: #9AA3B2; --line: #E3E6EB;
+		--jade: #0F7B5F; --jade-soft: #E4F2EC; --bad: #B42318; --bad-soft: #FDECEA; }
+	* { box-sizing: border-box; margin: 0; }
+	body { background: var(--bg); color: var(--ink); font: 15px/1.55 "Lexend", system-ui, sans-serif; }
+	.zh { font-family: "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; }
+	button, select, input { font: inherit; color: inherit; }
+	:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
+	[hidden] { display: none !important; }
+
+	header { display: flex; align-items: center; gap: 28px; padding: 18px 36px; }
+	.brand { font-weight: 600; font-size: 18px; color: var(--ink); text-decoration: none; }
+	nav { display: flex; gap: 6px; }
+	nav button { background: none; border: 0; padding: 6px 12px; border-radius: 8px; color: var(--mute); cursor: pointer; white-space: nowrap; }
+	nav button[aria-current="page"] { color: var(--ink); background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+	.primary { margin-left: auto; background: var(--ink); color: #fff; border: 0; font-weight: 500; padding: 10px 18px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+	.primary:disabled { opacity: .45; cursor: default; }
+
+	main { padding: 6px 36px 40px; }
+	.work { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; }
+	h1 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; line-height: 1.25; word-break: break-word; }
+	.meta { color: var(--mute); font-size: 14px; margin: 6px 0 18px; }
+	.player { background: #0d1117; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; display: grid; place-items: center; }
+	.player video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+	.player .wait { color: #c9d1dc; font-size: 14px; padding: 24px; text-align: center; }
+	.switch { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px; margin-top: 14px; }
+	.switch button { border: 0; background: none; padding: 6px 16px; border-radius: 999px; color: var(--mute); cursor: pointer; }
+	.switch button[aria-pressed="true"] { background: var(--jade); color: #fff; }
+	.switch button:disabled { opacity: .45; cursor: default; }
+
+	.steps { list-style: none; padding: 0; margin-top: 22px; }
+	.steps li { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); font-size: 14px; }
+	.steps .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--line); color: var(--mute); }
+	.steps .ok .n { background: var(--jade); color: #fff; }
+	.steps .cur { font-weight: 500; }
+	.steps .cur .n { background: var(--ink); color: #fff; }
+	.steps small { color: var(--mute); font-weight: 400; }
+	.bar { grid-column: 2 / 4; height: 4px; background: var(--line); border-radius: 4px; margin-top: 7px; overflow: hidden; }
+	.bar i { display: block; height: 100%; background: var(--ink); transition: width .5s; }
+	.clock { margin-top: 14px; font-size: 14px; color: var(--mute); }
+	.clock b { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+	.after { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; align-items: center; }
+	.after a, .ghost { font-size: 14px; color: var(--jade); text-decoration: none; border: 1px solid var(--line); background: var(--card); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+	.ghost.stop { color: var(--bad); }
+	.alert { margin-top: 18px; background: var(--bad-soft); color: var(--bad); border-radius: 12px; padding: 12px 14px; font-size: 14px; word-break: break-word; }
+
+	.list { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+	.list .head { display: flex; justify-content: space-between; gap: 12px; padding: 16px 22px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--mute); }
+	.list .head b { color: var(--ink); font-weight: 500; }
+	.rows { max-height: calc(100vh - 190px); overflow-y: auto; position: relative; }
+	.row { display: grid; grid-template-columns: 56px 1fr; gap: 3px 14px; padding: 14px 22px; border-bottom: 1px solid var(--line); cursor: pointer; }
+	.row:hover { background: #FAFBFC; }
+	.row time { color: var(--mute); font-size: 13px; padding-top: 2px; font-variant-numeric: tabular-nums; }
+	.row .zh { color: var(--mute); font-size: 14px; }
+	.row .vi { grid-column: 2; }
+	.row.todo .vi { color: var(--faint); }
+	.row.now { background: var(--jade-soft); box-shadow: inset 3px 0 0 var(--jade); }
+	.row.now .vi { font-weight: 500; }
+	.row .tag { grid-column: 2; font-size: 13px; color: var(--jade); }
+	.empty { padding: 40px 22px; color: var(--mute); text-align: center; }
+
+	.panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-bottom: 24px; }
+	.panel h2 { font-size: 18px; font-weight: 600; margin-bottom: 14px; }
+	.drop { display: grid; place-items: center; text-align: center; gap: 4px; border: 1.5px dashed #C9CED6; border-radius: 12px; padding: 26px; cursor: pointer; color: var(--mute); }
+	.drop.over { border-color: var(--jade); background: var(--jade-soft); }
+	.drop strong { color: var(--ink); font-weight: 500; }
+	.fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+	.fields label { display: grid; gap: 5px; font-size: 13px; color: var(--mute); }
+	.fields select { padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; width: 100%; }
+	.panel .go { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+	.panel .go .primary { margin-left: 0; }
+	.err { color: var(--bad); font-size: 14px; }
+
+	.lib { display: grid; gap: 10px; }
+	.item { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; cursor: pointer; text-align: left; width: 100%; }
+	.item:hover { border-color: #C9CED6; }
+	.item small { color: var(--mute); }
+	.st { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: #EEF0F3; color: var(--mute); align-self: start; }
+	.st.done { background: var(--jade-soft); color: var(--jade); }
+	.st.failed, .st.interrupted { background: var(--bad-soft); color: var(--bad); }
+	.st.running { background: var(--ink); color: #fff; }
+
+	@media (max-width: 900px) {
+		header, main { padding-left: 16px; padding-right: 16px; }
+		header { gap: 10px; }
+		.brand { font-size: 16px; }
+		nav button { padding: 6px 8px; }
+		.primary { padding: 9px 14px; }
+		.work { grid-template-columns: minmax(0, 1fr); }
+		.fields { grid-template-columns: minmax(0, 1fr); }
+		.rows { max-height: none; }
+	}
+	@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+<header>
+	<a href="/" class="brand">Dubber</a>
+	<nav>
+		<button data-view="work" aria-current="page">Đang làm</button>
+		<button data-view="lib">Thư viện</button>
+	</nav>
+	<button class="primary" id="add">Thêm video</button>
+</header>
+
+<main>
+	<section class="panel" id="upload" hidden>
+		<h2>Thêm video để lồng tiếng</h2>
+		<form id="f">
+			<input type="file" name="video" id="file" accept="video/*" hidden>
+			<label class="drop" id="drop" for="file">
+				<strong id="drop-title">Kéo video vào đây hoặc bấm để chọn</strong>
+				<span id="drop-sub">MP4, MOV, MKV, WEBM hoặc AVI</span>
+			</label>
+			<div class="fields">
+				<label>Ngôn ngữ trong video<select name="lang" id="lang"></select></label>
+				<label>Dịch bằng<select name="translator" id="translator"></select></label>
+				<label>Giọng đọc tiếng Việt<select name="voice" id="voice"></select></label>
+			</div>
+			<div class="go">
+				<button class="primary" id="go" type="submit" disabled>Bắt đầu lồng tiếng</button>
+				<span class="err" id="msg" role="status"></span>
+			</div>
+		</form>
+	</section>
+
+	<section class="work" id="work">
+		<div>
+			<h1 id="title">Chưa có video nào</h1>
+			<p class="meta" id="meta">Bấm "Thêm video" để bắt đầu.</p>
+			<div class="player" id="player"><div class="wait">Video sẽ hiện ở đây.</div></div>
+			<div class="switch" id="switch" hidden>
+				<button id="sw-src" aria-pressed="false">Bản gốc</button>
+				<button id="sw-vi" aria-pressed="true">Tiếng Việt</button>
+			</div>
+			<ol class="steps" id="steps" hidden></ol>
+			<p class="clock" id="clock" hidden></p>
+			<div class="alert" id="alert" hidden></div>
+			<div class="after" id="after" hidden></div>
+		</div>
+		<div class="list">
+			<div class="head"><b>Lời thoại song ngữ</b><span id="list-note">Bấm vào câu để nghe đoạn đó</span></div>
+			<div class="rows" id="rows"><div class="empty">Lời thoại sẽ hiện ở đây sau bước nghe.</div></div>
+		</div>
+	</section>
+
+	<section id="lib" hidden><div class="lib" id="lib-list"></div></section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const STATUS = { queued: "Đang chờ", running: "Đang chạy", done: "Xong", failed: "Lỗi", cancelled: "Đã huỷ", interrupted: "Bị ngắt" };
+// Thứ tự các bước trên giao diện; stage của pipeline -> bước đang chạy.
+const STEP_OF = { starting: 0, asr: 0, segment: 1, translate: 1, tts: 2, mix: 3, done: 4 };
+let clockBase = null;  // {elapsed, at}: lần poll gần nhất, để đồng hồ chạy từng giây giữa hai lần poll
+let opts = null, jobs = [], cur = null, mode = "vi", segs = [], segsFor = null, lastSegFetch = 0, chosenByUser = false, seenStatus = null;
+
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const nameOf = (j) => j.name;
+// "1 phút 23 giây" / "40 giây": người dùng đọc thời lượng, không đọc đồng hồ bấm giờ.
+const dur = (t) => { t = Math.max(0, Math.round(t)); const m = Math.floor(t / 60), s = t % 60; return m ? `${m} phút${s ? " " + s + " giây" : ""}` : `${s} giây`; };
+const mmss = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+const langLabel = (k) => opts?.langs.find((l) => l.code === k)?.label || k;
+const trLabel = (f) => { const t = opts?.translators.find((x) => x.file === f); return t ? `${t.name} (${t.model})` : f; };
+
+// ── Điều hướng ─────────────────────────────────────────────
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => show(b.dataset.view));
+function show(view) {
+	document.querySelectorAll("nav button").forEach((b) => b.dataset.view === view ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+	$("work").hidden = view !== "work"; $("lib").hidden = view !== "lib";
+}
+$("add").onclick = () => { $("upload").hidden = !$("upload").hidden; show("work"); if (!$("upload").hidden) $("drop").focus(); };
+
+// ── Thêm video ─────────────────────────────────────────────
+async function loadOptions() {
+	opts = await (await fetch("/api/options")).json();
+	$("lang").innerHTML = opts.langs.map((l) => `<option value="${esc(l.code)}">${esc(l.label)}</option>`).join("");
+	$("translator").innerHTML = opts.translators.map((t) => `<option value="${esc(t.file)}">${esc(t.name)} (${esc(t.model)})</option>`).join("");
+	$("voice").innerHTML = opts.voices.map((v) => `<option value="${esc(v.name)}"${v.name === opts.default_voice ? " selected" : ""}>${esc(v.name)}: ${esc(v.desc)}</option>`).join("");
+}
+function pickFile(file) {
+	if (!file) return;
+	const dt = new DataTransfer(); dt.items.add(file); $("file").files = dt.files;
+	$("drop-title").textContent = file.name;
+	$("drop-sub").textContent = `${(file.size / 2 ** 20).toFixed(1)} MB`;
+	const v = document.createElement("video"); v.preload = "metadata"; v.src = URL.createObjectURL(file);
+	$("go").disabled = false; $("msg").textContent = "";
+	v.onloadedmetadata = () => {
+		$("drop-sub").textContent = `${mmss(v.duration)}, ${(file.size / 2 ** 20).toFixed(1)} MB`; URL.revokeObjectURL(v.src);
+		// Báo sớm khi video quá dài (máy chủ vẫn kiểm lại): khỏi mất công tải lên rồi mới bị từ chối.
+		if (opts?.max_video_sec && v.duration > opts.max_video_sec) {
+			$("go").disabled = true; $("msg").style.color = "var(--bad)";
+			$("msg").textContent = `Video dài ${dur(v.duration)}, tối đa ${dur(opts.max_video_sec)}. Hãy cắt ngắn rồi chọn lại.`;
+		}
+	};
+}
+$("file").onchange = () => pickFile($("file").files[0]);
+["dragenter", "dragover"].forEach((e) => $("drop").addEventListener(e, (ev) => { ev.preventDefault(); $("drop").classList.add("over"); }));
+["dragleave", "drop"].forEach((e) => $("drop").addEventListener(e, (ev) => { ev.preventDefault(); $("drop").classList.remove("over"); }));
+$("drop").addEventListener("drop", (ev) => pickFile(ev.dataTransfer.files[0]));
+$("f").onsubmit = async (e) => {
+	e.preventDefault();
+	$("go").disabled = true; $("msg").style.color = "var(--mute)"; $("msg").textContent = "Đang tải video lên...";
+	try {
+		const r = await fetch("/api/jobs", { method: "POST", body: new FormData($("f")) });
+		// Lỗi từ tầng trước Flask có thể trả trang HTML chứ không phải JSON: qua Cloudflare, file quá ~100 MB bị chặn ngay ở Cloudflare.
+		const j = await r.json().catch(() => ({}));
+		if (r.status === 413) throw new Error(j.error || "Video quá lớn để tải lên (tối đa khoảng 100 MB). Hãy nén nhỏ lại rồi gửi lại.");
+		if (r.status === 401) { location.href = "/login"; return; }
+		if (!r.ok) throw new Error(j.error || `Tải lên không thành công (mã ${r.status}).`);
+		$("file").value = ""; $("drop-title").textContent = "Kéo video vào đây hoặc bấm để chọn"; $("drop-sub").textContent = "MP4, MOV, MKV, WEBM hoặc AVI";
+		$("msg").textContent = ""; $("upload").hidden = true;
+		open(j.id, true);
+	} catch (err) { $("msg").style.color = "var(--bad)"; $("msg").textContent = err.message; $("go").disabled = false; }
+};
+
+// ── Danh sách job ───────────────────────────────────────────
+async function refresh() {
+	const r = await fetch("/api/jobs");
+	if (r.status === 401) { location.href = "/login"; return; }  // chế độ chia sẻ: phiên hết hạn, nhập lại mã
+	jobs = await r.json();
+	$("lib-list").innerHTML = jobs.length ? jobs.map((j) => `<button class="item" data-id="${j.id}">
+		<span>${esc(nameOf(j))}</span><span class="st ${j.status}">${STATUS[j.status] || j.status}${j.status === "running" ? " " + j.progress.percent + "%" : ""}</span>
+		<small>${esc(j.created)}, ${esc(langLabel(j.lang))}, giọng ${esc(j.voice)}</small></button>`).join("")
+		: `<div class="empty">Chưa có video nào. Bấm "Thêm video" để bắt đầu.</div>`;
+	document.querySelectorAll(".item").forEach((b) => b.onclick = () => { open(b.dataset.id, true); show("work"); });
+	if (!chosenByUser || !jobs.find((j) => j.id === cur)) {
+		const pick = jobs.find((j) => j.status === "running") || jobs.find((j) => j.status === "queued") || jobs[0];
+		if (pick && pick.id !== cur) open(pick.id, false);
+	}
+	render();
+}
+function open(id, byUser) {
+	if (byUser) chosenByUser = true;
+	if (id !== cur) { cur = id; segs = []; segsFor = null; seenStatus = null; $("player").dataset.src = ""; }
+	refresh0();
+}
+async function refresh0() { if (!jobs.find((j) => j.id === cur)) await refresh(); else render(); }
+
+// ── Khung làm việc ─────────────────────────────────────────
+function render() {
+	const j = jobs.find((x) => x.id === cur);
+	if (!j) { $("rows").innerHTML = `<div class="empty">Lời thoại sẽ hiện ở đây sau bước nghe.</div>`; return; }
+	const p = j.progress, active = ["queued", "running"].includes(j.status);
+	$("title").textContent = nameOf(j);
+	$("meta").textContent = `${langLabel(j.lang)} sang tiếng Việt, giọng ${j.voice}, gửi lúc ${j.created}`;
+
+	// Bước
+	const step = j.status === "done" ? 4 : STEP_OF[p.stage] ?? 0;
+	const total = p.total ? `${p.total} câu` : "";
+	const items = [
+		["Nghe lời thoại", step > 0 ? total : "đang nghe"],
+		["Dịch sang tiếng Việt", trLabel(j.translator)],
+		[`Đọc bằng giọng ${j.voice}`, p.total ? `${step > 2 ? p.total : p.spoken} / ${p.total}` : ""],
+		["Ghép vào video", step > 3 ? "xong" : ""],
+	];
+	$("steps").hidden = false;
+	$("steps").innerHTML = items.map(([label, detail], i) => {
+		const cls = i < step ? "ok" : (i === step && active ? "cur" : "");
+		const bar = i === step && i === 2 && j.status === "running" && p.total ? `<span class="bar"><i style="width:${Math.round(100 * p.spoken / p.total)}%"></i></span>` : "";
+		return `<li class="${cls}"><span class="n">${i < step ? "✓" : i + 1}</span>${esc(label)}<small>${esc(detail)}</small>${bar}</li>`;
+	}).join("");
+
+	// Câu thông báo do máy chủ soạn sẵn cho người dùng; lỗi thô không bao giờ tới trình duyệt.
+	$("alert").hidden = !j.message;
+	$("alert").textContent = j.message || "";
+	const calm = j.status === "queued";
+	$("alert").style.background = calm ? "var(--jade-soft)" : ""; $("alert").style.color = calm ? "var(--jade)" : "";
+
+	$("after").hidden = false;
+	$("after").innerHTML = j.status === "done"
+		? `<a href="/api/jobs/${j.id}/video" download>Tải video tiếng Việt</a>`
+		: active ? `<button class="ghost stop" id="stop">Huỷ lần chạy này</button>` : "";
+	if ($("stop")) $("stop").onclick = async () => { await fetch(`/api/jobs/${j.id}/cancel`, { method: "POST" }); refresh(); };
+
+	drawClock(j);
+
+	// Video: bản gốc phát được ngay, bản Việt khi xong.
+	// Đang chạy: chỉ có bản gốc. Lúc job vừa xong (hoặc mở một job đã xong): chuyển sang bản Việt một lần,
+	// sau đó tôn trọng lựa chọn của người dùng.
+	const done = j.status === "done";
+	if (j.status !== seenStatus) { mode = done ? "vi" : "src"; seenStatus = j.status; }
+	$("switch").hidden = false; $("sw-vi").disabled = !done;
+	$("sw-src").setAttribute("aria-pressed", mode === "src"); $("sw-vi").setAttribute("aria-pressed", mode === "vi");
+	const want = mode === "vi" ? `/api/jobs/${j.id}/video` : `/api/jobs/${j.id}/source`;
+	if ($("player").dataset.src !== want) {
+		$("player").dataset.src = want;
+		$("player").innerHTML = `<video controls preload="metadata" src="${want}"></video>`;
+	}
+
+	// Lời thoại: tải lại khi đang chạy (mỗi 4 giây) hoặc một lần khi vừa xong.
+	const now = Date.now();
+	if (segsFor !== j.id + j.status || (active && now - lastSegFetch > 4000)) {
+		segsFor = j.id + j.status; lastSegFetch = now; loadSegments(j);
+	} else drawRows(j);
+}
+function drawClock(j) {
+	const c = $("clock");
+	if (j.status === "running" && j.elapsed_sec != null) {
+		clockBase = { id: j.id, elapsed: j.elapsed_sec, eta: j.eta_sec, from: j.eta_from, at: Date.now() };
+	} else clockBase = null;
+	if (j.status === "done" && j.elapsed_sec != null) {
+		c.innerHTML = j.audio_sec ? `Video dài <b>${dur(j.audio_sec)}</b>, xử lý xong trong <b>${dur(j.elapsed_sec)}</b>.`
+			: `Xử lý xong trong <b>${dur(j.elapsed_sec)}</b>.`;
+		c.hidden = false;
+	} else if (!clockBase) c.hidden = true;
+	tick();
+}
+function tick() {
+	if (!clockBase || clockBase.id !== cur) return;
+	const gone = (Date.now() - clockBase.at) / 1000, el = clockBase.elapsed + gone;
+	let text = `Đã chạy <b>${dur(el)}</b>.`;
+	if (clockBase.eta != null) {
+		const left = clockBase.eta - gone;
+		text += left > 5 ? ` Ước tính còn khoảng <b>${dur(left)}</b>, dựa trên ${clockBase.from} lần chạy trước.`
+			: " Sắp xong, đang lâu hơn ước tính một chút.";
+	}
+	$("clock").innerHTML = text; $("clock").hidden = false;
+}
+setInterval(tick, 1000);
+async function loadSegments(j) {
+	const r = await (await fetch(`/api/jobs/${j.id}/segments`)).json();
+	if (j.id !== cur) return;
+	segs = r.segments; drawRows(j);
+}
+function drawRows(j) {
+	if (!segs.length) { $("rows").innerHTML = `<div class="empty">${j.status === "running" || j.status === "queued" ? "Lời thoại sẽ hiện ở đây sau bước nghe." : "Không có lời thoại cho lần chạy này."}</div>`; return; }
+	const speaking = j.status === "running" && j.progress.stage === "tts" ? j.progress.spoken : -1;
+	const html = segs.map((s) => {
+		const st = speaking < 0 ? (s.tgt ? "" : "todo") : s.i < speaking ? "" : s.i === speaking ? "now" : "todo";
+		const t = mode === "vi" && s.play_start != null ? s.play_start : s.start;
+		return `<div class="row ${st}" data-t="${t}"><time>${mmss(t)}</time><div class="zh">${esc(s.src)}</div>
+			<div class="vi">${s.tgt ? esc(s.tgt) : "Đang chờ dịch..."}</div>${st === "now" ? '<div class="tag">Đang đọc câu này</div>' : ""}</div>`;
+	}).join("");
+	if ($("rows").dataset.html !== html) {
+		$("rows").dataset.html = html; $("rows").innerHTML = html;
+		document.querySelectorAll(".row").forEach((r) => r.onclick = () => { const v = $("player").querySelector("video"); if (v) { v.currentTime = +r.dataset.t; v.play(); } });
+		// Chỉ cuộn TRONG khung lời thoại, và chỉ khi khung có thanh cuộn riêng (màn hình rộng).
+		// scrollIntoView cuộn cả trang: trên điện thoại trang nhảy xuống mỗi lần đổi câu (thấy 2026-10-29).
+		const box = $("rows"), nowRow = box.querySelector(".row.now");
+		if (nowRow && box.scrollHeight > box.clientHeight + 4)
+			box.scrollTo({ top: nowRow.offsetTop - box.clientHeight / 2 + nowRow.clientHeight / 2, behavior: "smooth" });
+	}
+}
+$("sw-src").onclick = () => { mode = "src"; render(); };
+$("sw-vi").onclick = () => { mode = "vi"; render(); };
+
+loadOptions().then(refresh);
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>

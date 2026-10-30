@@ -1,0 +1,16 @@
+# Bí mật: KHÔNG BAO GIỜ đưa lên git (key Gemini, mã mời). Mẫu thì đã có .env.example.
+.env
+# Dữ liệu: video gốc (có bản quyền), kết quả, cache ASR, job, ví dụ trang giới thiệu, log chia sẻ.
+# Nặng hàng GB; dựng lại được bằng pipeline.
+data/
+# Sao lưu của tools/apply_pkg.sh: có git rồi thì lịch sử nằm trong git.
+.backups/
+# Gói giao nhận nếu lỡ để trong thư mục dự án.
+dubber_pkg_*.tar.gz
+dubber_pkg_*.md5
+# Rác của Python, pytest, IDE.
+__pycache__/
+*.pyc
+.pytest_cache/
+.idea/
+.vscode/

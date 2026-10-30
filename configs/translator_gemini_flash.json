@@ -1,0 +1,13 @@
+{
+ "name": "gemini-flash",
+ "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+ "model": "gemini-3.6-flash",
+ "api_key_env": "GEMINI_API_KEY",
+ "batch_size": 15,
+ "context_pairs": 6,
+ "temperature": 0.3,
+ "timeout_sec": 120,
+ "max_retries": 4,
+ "max_wait_sec": 120,
+ "_why": "Dịch kỹ hơn Flash-Lite (đỡ sai từ, thơ tốt hơn) nhưng chậm: đo 2026-10-29 1 câu mất 6.4s, ~770 token suy nghĩ. Gói miễn phí ~20 lượt/ngày: hợp video ngắn. 3.8-flash bỏ vì hết 20 lượt/ngày sau các lần thử lại 503."
+}
